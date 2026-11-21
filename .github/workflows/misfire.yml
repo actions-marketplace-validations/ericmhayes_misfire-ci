@@ -1,0 +1,42 @@
+# Misfire — advisory CI-failure explainer.
+#
+# Runs AFTER the "CI" workflow finishes. When that run went red, Misfire
+# investigates the failure and posts an advisory PR comment. It is fully
+# decoupled from CI (the `workflow_run` pattern), so:
+#   - it gets a write-scoped token even when CI itself ran from a fork PR, and
+#   - a bug in Misfire can never block or slow down the actual CI job.
+#
+# Rename `workflows: ["CI"]` below to match the name of the workflow you want
+# Misfire to watch.
+name: Misfire
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+# Only the comment write is needed; everything else stays read-only.
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  explain:
+    # Advisory only on red builds. We no longer gate on
+    # workflow_run.pull_requests — it's empty for fork PRs, which silently
+    # skipped exactly the PRs we want to help. Instead Misfire resolves the PR
+    # from the failed run's head commit (and exits cleanly if there is none,
+    # e.g. a direct push to the default branch).
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # `./` runs THIS repo's action (self-testing). External consumers use
+      # `uses: ericmhayes/misfire-ci@v0` instead — see README.
+      - uses: ./
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}

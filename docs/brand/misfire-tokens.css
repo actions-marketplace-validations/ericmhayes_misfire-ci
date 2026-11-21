@@ -1,0 +1,21 @@
+:root {
+  --mf-outline: #15171A;
+  --mf-cream: #FFF6EC;
+  --mf-ink: #0E1013;
+  --mf-paper: #F4F5F6;
+  --mf-orange: #FF7A1A;      /* cylinder caps, shapes */
+  --mf-orange-hi: #FFB273;
+  --mf-steel-light: #E9ECF0;
+  --mf-steel: #C2C8D0;
+  --mf-steel-dark: #8D96A2;
+  --mf-chrome: #D3DAE2;
+  --mf-iron: #3A3F47;
+  --mf-spark: #FFC21A;
+  --mf-sweat: #8FD3FF;
+  --mf-muted-light: #5E5A55;
+  --mf-muted-dark: #8A9099;
+  --mf-accent-text: #B54509; /* orange text on cream */
+  --mf-font-wordmark: "Fredoka", sans-serif; /* 650, lowercase, -0.01em */
+  --mf-font-ui: "Inter", system-ui, sans-serif;
+  --mf-font-mono: "JetBrains Mono", ui-monospace, monospace;
+}

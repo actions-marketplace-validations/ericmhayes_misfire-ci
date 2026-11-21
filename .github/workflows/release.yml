@@ -1,0 +1,77 @@
+# Release Misfire: build, publish to PyPI, cut a GitHub Release, and move the
+# floating major tag (e.g. v0) so `uses: <owner>/<repo>@v0` tracks the latest.
+#
+# Trigger by pushing a semver tag:  git tag v0.1.0 && git push origin v0.1.0
+#
+# One-time setup on PyPI: configure this repo as a Trusted Publisher for the
+# `misfire-ci` project (PyPI → project → Publishing → add GitHub publisher:
+# workflow `release.yml`). No PyPI token/secret is then needed — OIDC is used.
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Assert package version matches the tag
+        run: |
+          v="$(python -c "import re;print(re.search(r'__version__ = \"([^\"]+)\"', open('misfire/__init__.py').read()).group(1))")"
+          if [ "v${v}" != "${GITHUB_REF_NAME}" ]; then
+            echo "::error::package version v${v} does not match tag ${GITHUB_REF_NAME} — bump misfire/__init__.py"
+            exit 1
+          fi
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # OIDC trusted publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: pypi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # create the release + move the major tag
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${GITHUB_REF_NAME}" dist/* --generate-notes --title "${GITHUB_REF_NAME}"
+      - name: Move the floating major tag
+        run: |
+          major="v$(echo "${GITHUB_REF_NAME#v}" | cut -d. -f1)"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -f "$major" "${GITHUB_REF_NAME}"
+          git push origin -f "$major"

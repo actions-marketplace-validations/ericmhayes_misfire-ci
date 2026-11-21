@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Misfire — Documentation</title>
+<meta name="description" content="Misfire user guide: install, the GitHub Action, the advisory comment, real-vs-flaky classification, local/offline mode, CLI & Action reference, security, and FAQ." />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="alternate icon" href="assets/favicon.ico" />
+<link rel="canonical" href="https://misfire-ci.com/docs.html" />
+<meta property="og:title" content="Misfire — Documentation" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://misfire-ci.com/docs.html" />
+<meta property="og:image" content="https://misfire-ci.com/assets/misfire-og-card.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" />
+<link rel="stylesheet" href="assets/tokens.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a href="./"><img class="lockup" src="assets/misfire-lockup-horizontal-light.svg" alt="Misfire" /></a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a class="hide-sm" href="https://github.com/ericmhayes/misfire-ci">GitHub</a>
+      <a class="btn btn-primary" href="https://pypi.org/project/misfire-ci/">Install</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap docs">
+  <nav class="toc" id="toc" aria-label="Table of contents"></nav>
+  <article id="guide">
+    <p class="muted">Loading the guide…</p>
+  </article>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <img src="assets/misfire-lockup-horizontal-dark.svg" alt="Misfire" />
+      <div class="links">
+        <a href="index.html">Home</a>
+        <a href="https://github.com/ericmhayes/misfire-ci">GitHub</a>
+        <a href="https://pypi.org/project/misfire-ci/">PyPI</a>
+      </div>
+    </div>
+    <p class="fine">MIT-licensed · “Know why the build misfired.”</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.0/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script>
+  // Single-source the docs from docs/GUIDE.md. Try the paths that work both for
+  // a Pages deploy (guide copied next to this file) and a repo-root server.
+  const CANDIDATES = ["guide.md", "../docs/GUIDE.md", "GUIDE.md"];
+  const article = document.getElementById("guide");
+  const toc = document.getElementById("toc");
+
+  function slug(s) {
+    return s.toLowerCase().replace(/[^\w]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+
+  async function load() {
+    let md = null;
+    // Cache-busting: a per-load query param defeats any CDN/edge cache, and
+    // `cache: "no-store"` defeats the browser's HTTP cache — so the guide (and
+    // the sidebar built from it) is always current after an edit/deploy.
+    const bust = "?v=" + Date.now();
+    for (const url of CANDIDATES) {
+      try {
+        const r = await fetch(url + bust, { cache: "no-store" });
+        if (r.ok) { md = await r.text(); break; }
+      } catch (e) { /* try next */ }
+    }
+    if (md === null) {
+      article.innerHTML =
+        '<h1>Documentation</h1><p>The guide is served over HTTP. Run a static ' +
+        'server from the repo root (e.g. <code>python3 -m http.server</code>) and ' +
+        'open <code>/site/docs.html</code>, or read ' +
+        '<a href="https://github.com/ericmhayes/misfire-ci/blob/main/docs/GUIDE.md">docs/GUIDE.md</a> on GitHub.</p>';
+      return;
+    }
+    article.innerHTML = marked.parse(md);
+
+    // IDs on headings + build the sidebar from h2s.
+    const heads = article.querySelectorAll("h2, h3");
+    const seen = {};
+    heads.forEach((h) => {
+      let id = slug(h.textContent);
+      if (seen[id]) id += "-" + (++seen[id]); else seen[id] = 1;
+      h.id = id;
+      if (h.tagName === "H2") {
+        const a = document.createElement("a");
+        a.href = "#" + id; a.textContent = h.textContent; a.dataset.id = id;
+        toc.appendChild(a);
+      }
+    });
+
+    document.querySelectorAll("article pre code").forEach((b) => {
+      try { hljs.highlightElement(b); } catch (e) {}
+    });
+
+    // Scroll-spy: highlight the current section in the sidebar.
+    const links = [...toc.querySelectorAll("a")];
+    const byId = Object.fromEntries(links.map((a) => [a.dataset.id, a]));
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          links.forEach((a) => a.classList.remove("active"));
+          if (byId[e.target.id]) byId[e.target.id].classList.add("active");
+        }
+      });
+    }, { rootMargin: "-10% 0px -80% 0px" });
+    article.querySelectorAll("h2").forEach((h) => obs.observe(h));
+  }
+  load();
+</script>
+</body>
+</html>

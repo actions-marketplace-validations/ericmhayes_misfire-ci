@@ -1,0 +1,44 @@
+# Deploy the Misfire website (site/) to GitHub Pages.
+#
+# Manual trigger on purpose: enable Pages first (Settings → Pages → Build and
+# deployment → Source: "GitHub Actions"), then run this workflow. Running it
+# before Pages is enabled would just fail, so it does not auto-run on push.
+#
+# It assembles a flat site: everything in site/ at the root, plus the guide
+# (docs/GUIDE.md) copied next to docs.html as guide.md so the docs page renders
+# without any cross-directory fetch.
+name: Deploy site
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -R site/. _site/
+          cp docs/GUIDE.md _site/guide.md
+          # Persist the custom domain across Actions-based deploys.
+          echo "misfire-ci.com" > _site/CNAME
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

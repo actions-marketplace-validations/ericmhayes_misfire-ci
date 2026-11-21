@@ -1,0 +1,49 @@
+name: Bug report
+description: Something isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! For **security vulnerabilities, do not file here** —
+        see [SECURITY.md](../blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: CLI command or workflow snippet, and what you observed.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: How are you using Misfire?
+      options:
+        - GitHub Action
+        - CLI (misfire explain)
+        - Local (misfire analyze)
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Provider / model
+      description: e.g. claude / claude-opus-4-8, or openai / gpt-4o
+  - type: input
+    id: version
+    attributes:
+      label: Misfire version
+      description: Output of `pip show misfire-ci` (or the Action tag).
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Error output or the advisory comment. **Redact any secrets.**
+      render: shell

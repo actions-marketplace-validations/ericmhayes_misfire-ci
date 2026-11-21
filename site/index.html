@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Misfire — Know why the build misfired.</title>
+<meta name="description" content="An open-source GitHub Action that, on a red build, runs an AI investigation of the CI failure and posts an advisory PR comment — explaining the root cause and flagging real vs. likely-flaky. Advisory only: never blocks, merges, or changes code." />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="alternate icon" href="assets/favicon.ico" />
+<link rel="canonical" href="https://misfire-ci.com/" />
+<meta property="og:title" content="Misfire — Know why the build misfired." />
+<meta property="og:description" content="On a red build, Misfire diagnoses the failure and flags real vs. flaky — an advisory PR comment, never a blocker." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://misfire-ci.com/" />
+<meta property="og:image" content="https://misfire-ci.com/assets/misfire-og-card.png" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/tokens.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap bar">
+    <a href="./"><img class="lockup" src="assets/misfire-lockup-horizontal-light.svg" alt="Misfire" /></a>
+    <nav>
+      <a href="docs.html">Docs</a>
+      <a class="hide-sm" href="https://github.com/ericmhayes/misfire-ci">GitHub</a>
+      <a class="btn btn-primary" href="docs.html">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap grid">
+      <div>
+        <div class="tagline-mono">advisory CI-failure explainer · real vs. flaky</div>
+        <h1>Know why the build <span class="spark">misfired</span>.</h1>
+        <p class="lede">On a red build, Misfire runs an AI investigation of the CI failure and posts a single <strong>advisory</strong> PR comment — root cause, and whether the failure is <strong>real</strong> or <strong>likely flaky</strong>. It never blocks, merges, or changes code.</p>
+        <div class="panel" style="margin-bottom:20px">
+          <div class="chrome"><i class="o"></i><i></i><i></i><span class="name">.github/workflows/misfire.yml</span></div>
+          <pre><code><span class="t-key">on</span>:
+  <span class="t-key">workflow_run</span>:
+    <span class="t-key">workflows</span>: [<span class="t-str">"CI"</span>]
+    <span class="t-key">types</span>: [completed]
+<span class="t-key">jobs</span>:
+  <span class="t-key">explain</span>:
+    <span class="t-key">if</span>: github.event.workflow_run.conclusion == <span class="t-str">'failure'</span>
+    <span class="t-key">steps</span>:
+      - <span class="t-key">uses</span>: <span class="t-orange">ericmhayes/misfire-ci@v0</span></code></pre>
+        </div>
+        <div class="cta">
+          <a class="btn btn-primary" href="docs.html">Get started</a>
+          <a class="btn btn-ghost" href="https://github.com/ericmhayes/misfire-ci">View on GitHub</a>
+        </div>
+      </div>
+      <div>
+        <img class="mascot" src="assets/misfire-mascot-animated.svg" alt="Misfire mascot — a worried V-engine working out why it misfired" />
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKED EXAMPLE -->
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">What it does</div>
+        <h2>A red build goes in. An advisory comes out.</h2>
+        <p class="muted">Misfire investigates over shared tools — the failing logs, the PR diff, and the test's history — then posts one comment it renders itself. You read it; nothing is blocked.</p>
+      </div>
+      <div class="two">
+        <div>
+          <p class="panel-label">the failing run</p>
+          <div class="panel">
+            <div class="chrome"><i class="o"></i><i></i><i></i><span class="name">CI · run #1472 · failure</span></div>
+            <pre><code><span class="t-com">____ test_auth_status ____</span>
+<span class="t-real">E   AssertionError: expected 'active' got 'pending'</span>
+tests/test_auth.py:42: AssertionError
+
+<span class="t-com"># agent: get_failing_logs → get_pr_diff →</span>
+<span class="t-com">#        get_test_history → post_pr_comment</span></code></pre>
+          </div>
+        </div>
+        <div>
+          <p class="panel-label">the advisory comment</p>
+          <div class="panel">
+            <div class="chrome"><i class="o"></i><i></i><i></i><span class="name">🔧 Misfire — build failure analysis</span></div>
+            <pre><code><span class="t-orange">Root cause:</span> auth.py:42 changed status 'active'
+→ 'pending', so test_auth_status now fails.
+<span class="t-orange">Category:</span> test_assertion
+<span class="t-orange">Confidence:</span> 90%
+
+<span class="t-orange">Verdict:</span> <span class="t-real">🔴 Likely a real failure (95%)</span> —
+passed on every recent unrelated run and
+failed only on the commit under test.
+
+<span class="t-com">— advisory only, nothing was changed or blocked.</span></code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">Why it's different</div>
+        <h2>Trustworthy by design</h2>
+      </div>
+      <div class="features">
+        <div class="card"><div class="ic">🛟</div><h3>Advisory, never blocking</h3><p>Its only write action is a single PR comment. It never merges, blocks, quarantines, or edits code — a Misfire bug can't break your CI.</p></div>
+        <div class="card"><div class="ic">🎲</div><h3>Real vs. likely flaky</h3><p>A deterministic stats layer over run history classifies the failure — a number the model is told to treat as authoritative and can't fabricate.</p></div>
+        <div class="card"><div class="ic">🔭</div><h3>Logs + diff + history</h3><p>An agent gathers the evidence that matters and connects the failure to the change under test — not a single-shot summary of the log tail.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 16 16" width="19" height="19" fill="currentColor" aria-hidden="true"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"></path></svg></div><h3>Fork-PR safe</h3><p>The decoupled <code>workflow_run</code> trigger resolves the PR from the head commit, so it works on fork PRs and can't slow your CI job.</p></div>
+        <div class="card"><div class="ic">🔒</div><h3>Secret-scrubbed</h3><p>Logs and the diff are redacted before they reach the model, and the comment text is sanitized against HTML/Markdown injection.</p></div>
+        <div class="card"><div class="ic">🔌</div><h3>Your provider, your key</h3><p>Runs on <strong>Claude or OpenAI</strong> (pick with <code>--provider</code>), extensible to more. Bring your own API key — Misfire never provides one. Open-source, local <code>--no-ai</code> mode too.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">How it works</div>
+        <h2>Three steps</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="n">1</div><h3>Add the workflow</h3><p>Drop in a <code>workflow_run</code> workflow that watches your CI, and add your provider's API key as a secret (you bring your own).</p></div>
+        <div class="step"><div class="n">2</div><h3>A build goes red</h3><p>Misfire fires only on failures. It reads the failing logs, the diff, and the failing test's history.</p></div>
+        <div class="step"><div class="n">3</div><h3>Read the advisory</h3><p>One rolling comment per PR: root cause, category, confidence, and the real-vs-flaky verdict.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <div class="wrap">
+      <div class="sister">
+        <div>
+          <p class="k">open source · bring-your-own-key</p>
+          <p><strong>Advisory-only CI failure analysis</strong> — root cause and real-vs-flaky, on your own provider and key.</p>
+        </div>
+        <a class="btn btn-primary" href="docs.html">Read the docs →</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="cols">
+      <img src="assets/misfire-lockup-horizontal-dark.svg" alt="Misfire" />
+      <div class="links">
+        <a href="docs.html">Docs</a>
+        <a href="https://github.com/ericmhayes/misfire-ci">GitHub</a>
+        <a href="https://pypi.org/project/misfire-ci/">PyPI</a>
+        <a href="https://github.com/ericmhayes/misfire-ci/blob/main/LICENSE">License</a>
+      </div>
+    </div>
+    <p class="fine">MIT-licensed · bring-your-own key · <span class="mono">pip install misfire-ci</span> · “Know why the build misfired.”</p>
+  </div>
+</footer>
+
+</body>
+</html>

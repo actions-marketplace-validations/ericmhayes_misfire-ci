@@ -1,0 +1,31 @@
+{
+  "$description": "Misfire brand tokens (W3C Design Tokens). Cartoon-sticker mascot: a worried V-engine with orange cylinder caps.",
+  "color": {
+    "outline":     { "$type": "color", "$value": "#15171A", "$description": "Sticker outline; wordmark on light." },
+    "cream":       { "$type": "color", "$value": "#FFF6EC", "$description": "Light ground (retro-ad paper). Primary." },
+    "ink":         { "$type": "color", "$value": "#0E1013", "$description": "Dark ground. Mascot gets a paper sticker halo on it." },
+    "paper":       { "$type": "color", "$value": "#F4F5F6", "$description": "Wordmark and halo on dark." },
+    "orange":      { "$type": "color", "$value": "#FF7A1A", "$description": "Brand orange: cylinder caps, accent bars. Shapes only." },
+    "orange-hi":   { "$type": "color", "$value": "#FFB273", "$description": "Highlight on the caps." },
+    "steel-light": { "$type": "color", "$value": "#E9ECF0", "$description": "Block face, intake top." },
+    "steel":       { "$type": "color", "$value": "#C2C8D0", "$description": "Cylinder banks, intake, lower block, eyelids." },
+    "steel-dark":  { "$type": "color", "$value": "#8D96A2", "$description": "Sump fins." },
+    "chrome":      { "$type": "color", "$value": "#D3DAE2", "$description": "Pulley rims (the eyes), idler." },
+    "iron":        { "$type": "color", "$value": "#3A3F47", "$description": "Timing belt." },
+    "spark":       { "$type": "color", "$value": "#FFC21A", "$description": "The misfire spark." },
+    "sweat":       { "$type": "color", "$value": "#8FD3FF" },
+    "muted-light": { "$type": "color", "$value": "#5E5A55", "$description": "Secondary text on cream (6.4:1)." },
+    "muted-dark":  { "$type": "color", "$value": "#8A9099", "$description": "Secondary text on ink (5.9:1)." },
+    "accent-text": { "$type": "color", "$value": "#B54509", "$description": "Orange for TEXT on cream (5.1:1)." }
+  },
+  "font": {
+    "wordmark": { "$type": "fontFamily", "$value": ["Fredoka", "sans-serif"], "$description": "Weight 650, lowercase only, tracking -1%. Outlined in the SVGs." },
+    "ui":       { "$type": "fontFamily", "$value": ["Inter", "system-ui", "sans-serif"] },
+    "mono":     { "$type": "fontFamily", "$value": ["JetBrains Mono", "ui-monospace", "monospace"], "$description": "Tagline, terminal accents. 500." }
+  },
+  "mascot": {
+    "grid":    { "$value": "512px" },
+    "outline": { "$value": "12u (18u on the small cut)" },
+    "cuts":    { "$value": "mascot (puff + sweat) for illustration; mark/icon >= 48px; small 24-47px; pixel-fitted 16px" }
+  }
+}

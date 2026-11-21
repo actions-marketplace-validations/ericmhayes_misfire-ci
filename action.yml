@@ -1,0 +1,109 @@
+name: "Misfire"
+description: "Know why the build misfired — agentic CI failure analysis posted as an advisory PR comment."
+branding:
+  icon: "alert-triangle"
+  color: "orange"
+
+inputs:
+  provider:
+    description: "AI provider: claude or openai (default claude). Bring your own key."
+    required: false
+    default: "claude"
+  anthropic-api-key:
+    description: >-
+      Your Anthropic API key (for provider: claude). Bring-your-own-key — Misfire
+      never provides a key; every analysis is billed to your account.
+    required: false
+  openai-api-key:
+    description: >-
+      Your OpenAI API key (for provider: openai). For an OpenAI-compatible
+      endpoint such as GitHub Models / Copilot, put your GitHub token here and set
+      `openai-base-url`.
+    required: false
+  openai-base-url:
+    description: >-
+      Optional OpenAI-compatible base URL (e.g. GitHub Models / Copilot). Used
+      with provider: openai; leave blank for api.openai.com.
+    required: false
+  model:
+    description: "Model to use. You set this; falls back to the provider's default."
+    required: false
+  github-token:
+    description: "GitHub token with pull-request write (to post the comment) and actions read (to fetch logs)."
+    required: true
+  run-id:
+    description: >-
+      The failed workflow run ID to analyze. Defaults to the run that triggered
+      a `workflow_run` event (the failed CI run), falling back to the current run
+      when Misfire is invoked as a step inside the failing workflow itself.
+    required: false
+  pr-number:
+    description: >-
+      The pull request number to comment on. Optional — when omitted, Misfire
+      resolves the PR from the failed run's head commit via the GitHub API,
+      which also works for PRs from forks (where `workflow_run.pull_requests`
+      is empty).
+    required: false
+  max-turns:
+    description: "Cap on agent model round-trips before Misfire stops gracefully. Optional."
+    required: false
+  token-budget:
+    description: "Cap on cumulative input+output tokens before Misfire stops gracefully. Optional."
+    required: false
+
+outputs:
+  advisory:
+    description: "The rendered advisory body (empty when nothing was posted). Handy for Slack/webhook steps."
+    value: ${{ steps.explain.outputs.advisory }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install Misfire
+      shell: bash
+      env:
+        PROVIDER: ${{ inputs.provider }}
+      run: |
+        pip install misfire-ci
+        # OpenAI (and OpenAI-compatible endpoints) need the optional SDK.
+        if [ "${PROVIDER}" = "openai" ]; then
+          pip install "misfire-ci[openai]"
+        fi
+
+    - name: Explain failure
+      id: explain
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        OPENAI_API_KEY: ${{ inputs.openai-api-key }}
+        OPENAI_BASE_URL: ${{ inputs.openai-base-url }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        PROVIDER: ${{ inputs.provider }}
+        MODEL: ${{ inputs.model }}
+        RUN_ID: ${{ inputs.run-id || github.event.workflow_run.id || github.run_id }}
+        PR_NUMBER: ${{ inputs.pr-number }}
+        MAX_TURNS: ${{ inputs.max-turns }}
+        TOKEN_BUDGET: ${{ inputs.token-budget }}
+      run: |
+        # Build args as a quoted array so an input can't word-split into extra flags.
+        args=(--run "${RUN_ID}" --provider "${PROVIDER}")
+        if [ -n "${MODEL}" ]; then args+=(--model "${MODEL}"); fi
+        if [ -n "${PR_NUMBER}" ]; then args+=(--pr "${PR_NUMBER}"); fi
+        if [ -n "${MAX_TURNS}" ]; then args+=(--max-turns "${MAX_TURNS}"); fi
+        if [ -n "${TOKEN_BUDGET}" ]; then args+=(--token-budget "${TOKEN_BUDGET}"); fi
+        body="$(misfire explain "${args[@]}")"
+        if [ -n "${body}" ]; then echo "${body}"; fi
+        # Random heredoc delimiter so model-influenced text can't terminate the
+        # output block early (GitHub's own recommendation).
+        delim="MISFIRE_$(openssl rand -hex 16)"
+        {
+          echo "advisory<<${delim}"
+          echo "${body}"
+          echo "${delim}"
+        } >> "${GITHUB_OUTPUT}"

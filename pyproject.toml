@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "misfire-ci"
+dynamic = ["version"]  # single-sourced from misfire/__init__.py (see tool.setuptools.dynamic)
+description = "Know why the build misfired — an agentic CI failure explainer that classifies real vs. flaky failures and posts an advisory PR comment."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Eric Hayes" }]
+keywords = ["ci", "github-actions", "flaky-tests", "agent", "claude", "anthropic"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+]
+dependencies = [
+    "anthropic>=0.40.0",
+    "httpx>=0.27.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+# Runtime extra for the OpenAI provider (incl. OpenAI-compatible endpoints like
+# GitHub Models / Copilot): `pip install "misfire-ci[openai]"`. Kept out of core
+# `dependencies` so a Claude-only install doesn't pull the OpenAI SDK.
+openai = ["openai>=1.0.0"]
+dev = [
+    "misfire-ci[openai]",
+    "pytest>=7.0.0",
+    "ruff>=0.4.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ericmhayes/misfire-ci"
+Repository = "https://github.com/ericmhayes/misfire-ci"
+Issues = "https://github.com/ericmhayes/misfire-ci/issues"
+
+[project.scripts]
+misfire = "misfire.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "misfire.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["misfire*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Tests are function-based. Collect only classes suffixed `Test` so domain models
+# named `Test*` (e.g. TestHistory) aren't mistaken for test suites.
+python_classes = ["*Test"]
